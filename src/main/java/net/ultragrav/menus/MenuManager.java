@@ -2,22 +2,29 @@ package net.ultragrav.menus;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
-import xyz.ultragrav.subscriptions.spigot.EventSubscription;
-import xyz.ultragrav.subscriptions.spigot.EventSubscriptions;
+import org.bukkit.plugin.Plugin;
 
-public class MenuManager {
-    public static final MenuManager instance = new MenuManager();
+public class MenuManager implements Listener {
+    public static MenuManager instance;
 
-    private MenuManager() {
-        EventSubscriptions.instance.subscribe(this, MenuManager.class);
+    protected Plugin plugin;
+
+    private MenuManager(Plugin plugin) {
+        this.plugin = plugin;
+
+        instance = this;
+
+        Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
-    @EventSubscription
+    @EventHandler
     public void handleClose(InventoryCloseEvent event) {
         Inventory closedInv = event.getInventory();
         if (closedInv.getHolder() instanceof MenuHolder) {
@@ -26,7 +33,7 @@ public class MenuManager {
         }
     }
 
-    @EventSubscription
+    @EventHandler
     public void onClick(InventoryClickEvent event) {
         Inventory inv = event.getWhoClicked().getOpenInventory().getTopInventory();
         if (inv.getHolder() instanceof MenuHolder) {
@@ -36,7 +43,7 @@ public class MenuManager {
         }
     }
 
-    @EventSubscription
+    @EventHandler
     public void onDrag(InventoryDragEvent event) {
         Inventory inv = event.getView().getTopInventory();
         if (inv.getHolder() instanceof MenuHolder) {

@@ -18,7 +18,7 @@ public abstract class Menu {
     private int rows;
     private final Map<Integer, MenuElement> elements = new HashMap<>();
 
-    private final int taskId = -1;
+    private int taskId = -1;
     private final List<UUID> viewers = new ArrayList<>();
 
     public Menu(String title, int rows) {
@@ -73,11 +73,9 @@ public abstract class Menu {
         viewers.add(player.getUniqueId());
         if (taskId == -1) {
             // We only do updates 10 times per second since more is unnecessary
-//            taskId = Scheduler.scheduleSyncRepeatingTaskT(this::update, 2, 2);
-            // TODO: Either make scheduler another required API, or somehow make it work without a plugin
+            taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(MenuManager.instance.plugin, this::update, 2, 2);
         }
-//        Synchronizer.synchronize(() -> player.openInventory(inv));
-        player.openInventory(inv); // TODO: Same as above for Synchronizer
+        Bukkit.getScheduler().runTask(MenuManager.instance.plugin, () -> player.openInventory(inv));
     }
 
     private void update() {
