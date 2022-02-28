@@ -7,6 +7,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.plugin.Plugin;
@@ -32,6 +33,8 @@ public class MenuManager implements Listener {
             menu.onClose(event);
         }
     }
+
+    // TODO: Possibly handle InventoryOpenEvent to avoid compatability with other plugins since Menu#onClose might not be called
 
     @EventHandler
     public void onClick(InventoryClickEvent event) {
