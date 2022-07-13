@@ -34,6 +34,9 @@ public class ClickHandlerSet {
     public ClickHandlerSet middleClick(Consumer<InventoryClickEvent> handler) {
         return assign(handler, ClickType.MIDDLE);
     }
+    public ClickHandlerSet drop(Consumer<InventoryClickEvent> handler) {
+        return assign(handler, ClickType.DROP);
+    }
     public ClickHandlerSet defaultHandler(Consumer<InventoryClickEvent> handler) {
         defaultHandler = handler;
         return this;

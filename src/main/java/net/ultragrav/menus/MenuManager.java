@@ -23,6 +23,18 @@ public class MenuManager implements Listener {
         instance = this;
 
         Bukkit.getPluginManager().registerEvents(this, plugin);
+
+        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                Inventory inv = player.getOpenInventory().getTopInventory();
+                if (inv == null) continue;
+
+                if (inv.getHolder() instanceof MenuHolder) {
+                    MenuHolder holder = (MenuHolder) inv.getHolder();
+                    holder.getMenu().update();
+                }
+            }
+        }, 0, 2);
     }
 
     @EventHandler
@@ -33,8 +45,6 @@ public class MenuManager implements Listener {
             menu.onClose(event);
         }
     }
-
-    // TODO: Possibly handle InventoryOpenEvent to avoid compatability with other plugins since Menu#onClose might not be called
 
     @EventHandler
     public void onClick(InventoryClickEvent event) {

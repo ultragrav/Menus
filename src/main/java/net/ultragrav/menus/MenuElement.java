@@ -62,6 +62,7 @@ public class MenuElement {
         if (updateTicker++ >= updateInterval) {
             updateTicker = 0;
             updater.accept(this.updaterInstance);
+
         }
     }
 }

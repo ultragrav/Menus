@@ -78,7 +78,7 @@ public abstract class Menu {
         Bukkit.getScheduler().runTask(MenuManager.instance.plugin, () -> player.openInventory(inv));
     }
 
-    private void update() {
+    void update() {
         for (MenuElement element : this.elements.values())
             element.update();
     }
