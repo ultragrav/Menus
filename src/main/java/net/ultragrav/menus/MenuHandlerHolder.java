@@ -1,6 +1,7 @@
 package net.ultragrav.menus;
 
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.bukkit.event.inventory.DragType;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -15,9 +16,12 @@ import java.util.function.Consumer;
 
 @Getter
 @Setter
+@RequiredArgsConstructor
 public class MenuHandlerHolder {
-    private ClickHandlerSet clickHandler;
-    private ClickHandlerSet ownClickHandler;
+    private final Menu parent;
+
+    private ClickHandlerSet<MenuHandlerHolder> clickHandler;
+    private ClickHandlerSet<MenuHandlerHolder> ownClickHandler;
 
     private Consumer<InventoryDragEvent> dragHandler;
     private Consumer<InventoryDragEvent> ownDragHandler;
@@ -77,5 +81,25 @@ public class MenuHandlerHolder {
         if (!itemsBottom.isEmpty() && ownDragHandler != null) ownDragHandler.accept(ev2);
 
         if (!ev.isCancelled() && !ev2.isCancelled()) event.setCancelled(false);
+    }
+
+    public ClickHandlerSet<MenuHandlerHolder> defaultClickHandler() {
+        return (clickHandler = new ClickHandlerSet<>(this));
+    }
+    public ClickHandlerSet<MenuHandlerHolder> ownInventoryClickHandler() {
+        return (ownClickHandler = new ClickHandlerSet<>(this));
+    }
+
+    public MenuHandlerHolder defaultDragHandler(Consumer<InventoryDragEvent> handler) {
+        dragHandler = handler;
+        return this;
+    }
+    public MenuHandlerHolder ownInventoryDragHandler(Consumer<InventoryDragEvent> handler) {
+        ownDragHandler = handler;
+        return this;
+    }
+
+    public Menu finish() {
+        return parent;
     }
 }

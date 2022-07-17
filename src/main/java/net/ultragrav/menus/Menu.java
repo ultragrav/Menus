@@ -1,8 +1,9 @@
 package net.ultragrav.menus;
 
-import net.ultragrav.menus.shapes.MenuRect;
+import net.ultragrav.menus.util.ItemBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -11,16 +12,16 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 public abstract class Menu {
-    private final MenuHandlerHolder handler = new MenuHandlerHolder();
-
+    private final MenuHandlerHolder handler = new MenuHandlerHolder(this);
+    private final Map<Integer, MenuElement> elements = new HashMap<>();
+    private final List<UUID> viewers = new ArrayList<>();
     private String title;
     private int rows;
-    private final Map<Integer, MenuElement> elements = new HashMap<>();
-
     private int taskId = -1;
-    private final List<UUID> viewers = new ArrayList<>();
 
     public Menu(String title, int rows) {
         this.title = title;
@@ -32,6 +33,10 @@ public abstract class Menu {
     }
 
     public abstract void setup(HumanEntity player);
+
+    public MenuHandlerHolder clickBuilder() {
+        return handler;
+    }
 
     public void onClose(InventoryCloseEvent event) {
         viewers.remove(event.getPlayer().getUniqueId());
@@ -57,18 +62,23 @@ public abstract class Menu {
         return inv;
     }
 
+    public void open(HumanEntity player) {
+        open(player, true);
+    }
+
     /**
      * Opens the inventory for the given player.
      *
      * @param player The player to open the inventory for.
      */
-    public void open(HumanEntity player) {
+    public void open(HumanEntity player, boolean setup) {
         if (player == null) return;
 
         if (player.getOpenInventory() != null)
             MenuManager.instance.handleClose(new InventoryCloseEvent(player.getOpenInventory()));
 
-        setup(player);
+        if (setup)
+            setup(player);
 
         Inventory inv = createInventory();
         viewers.add(player.getUniqueId());
@@ -89,6 +99,10 @@ public abstract class Menu {
                 continue;
             }
             Inventory inv = player.getOpenInventory().getTopInventory();
+            if (inv == null) {
+                it.remove();
+                continue;
+            }
             if (inv.getHolder() instanceof MenuHolder) {
                 MenuHolder holder = (MenuHolder) inv.getHolder();
                 if (holder.getMenu() != this) {
@@ -106,6 +120,7 @@ public abstract class Menu {
             taskId = -1;
         }
     }
+
     void update(Inventory inv) {
         for (int slot : this.elements.keySet()) {
             MenuElement e = this.elements.get(slot);
@@ -147,6 +162,64 @@ public abstract class Menu {
         handler.handleDrag(event);
     }
 
+    public List<UUID> getViewers() {
+        viewers.removeIf(uuid -> {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player == null) {
+                return true;
+            }
+            Inventory inv = player.getOpenInventory().getTopInventory();
+            if (inv == null) return true;
+            if (inv.getHolder() instanceof MenuHolder) {
+                MenuHolder holder = (MenuHolder) inv.getHolder();
+                if (holder.getMenu() != this) {
+                    return true;
+                }
+                return false;
+            } else {
+                return true;
+            }
+        });
+        return this.viewers;
+    }
+
+    public int getIndex(int row, int col) {
+        return row * 9 + col;
+    }
+
+    public int getIndexByCoord(int x, int y) {
+        return getIndex(y, x);
+    }
+
+
+    public void evenlyDistribute(int row, MenuElement... elements) {
+        int size = elements.length;
+        if (size == 0)
+            return;
+
+        if (size <= 5) {
+            //Distribute separated by 2.
+            int fromMiddle = size - 1;
+            int i1 = 0;
+            for (int i = 4 - fromMiddle; i < 9 && i1 < size; i += 2) {
+                this.setElement(row * 9 + i, elements[i1]);
+                i1++;
+            }
+        } else {
+            //Distribute side by side in the middle.
+            int fromMiddle = size / 2;
+            int i1 = 0;
+            for (int i = 4 - fromMiddle; i < 9 && i1 < size; i++) {
+                this.setElement(row * 9 + i, elements[i1]);
+                i1++;
+            }
+        }
+    }
+
+    public void fillBlack() {
+        fillElement(new MenuElement(new ItemBuilder(Material.STAINED_GLASS_PANE, 1, (byte) 7).setName("&7").build()));
+    }
+
     /**
      * Sets the element at the given slot.
      *
@@ -184,12 +257,80 @@ public abstract class Menu {
             setElement(i, element);
     }
 
-    public void setEmpty(MenuElement element) {
-
+    public void setCol(int col, MenuElement element) {
+        for (int i = col; i < this.rows * 9; i += 9) {
+            this.setElement(i, element);
+        }
     }
 
-    public MenuRect rect(int minRow, int minColumn, int maxRow, int maxColumn) {
-        return new MenuRect(this, minRow, minColumn, maxRow, maxColumn);
+    public AtomicInteger setupActionableList(int startPos, int endPos, int backPos, int nextPos, Function<Integer, MenuElement> elementSupplier, int page) {
+        return setupActionableList(startPos, endPos, backPos, nextPos, elementSupplier, new AtomicInteger(page));
+    }
+
+    public AtomicInteger setupActionableList(int startPos, int endPos, int backPos, int nextPos, Function<Integer, MenuElement> elementSupplier, AtomicInteger pageHandler) {
+        //Pageable list
+        int page = pageHandler.get();
+
+        int calculatedMarginLeft = startPos % 9;
+        int calculatedMarginRight = 8 - endPos % 9;
+
+        int elementIndex = page * (9 - calculatedMarginLeft - calculatedMarginRight) * (((endPos - (endPos % 9)) / 9) - ((startPos - (startPos % 9)) / 9) + 1);
+        boolean placing = true;
+        for (int slot = startPos; slot <= endPos; slot++) {
+
+            if (placing) {
+                MenuElement element = elementSupplier.apply(elementIndex);
+                if (element == null) {
+                    placing = false;
+                    this.setElement(slot, null);
+                } else {
+                    this.setElement(slot, element);
+                }
+            } else {
+                this.setElement(slot, null);
+            }
+
+            if (8 - slot % 9 <= calculatedMarginRight) {
+                slot += calculatedMarginLeft + calculatedMarginRight;
+            }
+
+            elementIndex++;
+        }
+
+        MenuElement back = new MenuElement(new ItemBuilder(Material.ARROW, 1).setName("&fBack").build())
+                .clickBuilder().defaultHandler(e -> {
+                    pageHandler.decrementAndGet();
+                    this.setupActionableList(startPos, endPos, backPos,
+                            nextPos, elementSupplier, pageHandler);
+                    open(e.getWhoClicked(), false);
+                }).build();
+        MenuElement next = new MenuElement(new ItemBuilder(Material.ARROW, 1).setName("&fNext").build())
+                .clickBuilder().defaultHandler(e -> {
+                    pageHandler.incrementAndGet();
+                    this.setupActionableList(startPos, endPos, backPos,
+                            nextPos, elementSupplier, pageHandler);
+                    open(e.getWhoClicked(), false);
+                }).build();
+
+        if (page != 0) {
+            this.setElement(backPos, back);
+        } else {
+            this.setElement(backPos, null);
+        }
+        if (elementSupplier.apply(elementIndex) != null) {
+            this.setElement(nextPos, next);
+        } else {
+            this.setElement(nextPos, null);
+        }
+        return pageHandler;
+    }
+
+    protected MenuElement getFiller(int dat) {
+        return new MenuElement(new ItemBuilder(Material.STAINED_GLASS_PANE)
+                .setDurability((short) dat)
+                .setName("§7")
+                .build()
+        );
     }
 
     /**
@@ -229,27 +370,10 @@ public abstract class Menu {
         }
     }
 
-    /**
-     * Distributes the given elements evenly in the given row.
-     *
-     * @param row      The row.
-     * @param elements The elements.
-     */
-    public void evenlyDistribute(int row, MenuElement... elements) {
-        int size = elements.length;
-        if (size == 0)
-            return;
-
-        if (size <= Math.ceil((9 * 2) / 2d)) {
-            int fromMiddle = size - 1;
-            int i1 = 0;
-            for (int i = 4 - fromMiddle; i < 9 && i1 < size; i += 2) {
-                this.setElement(row * 9 + i, elements[i1]);
-                i1++;
-            }
-        } else {
-            for (int i = 0; i < 9 && i < size; i++) {
-                this.setElement(row * 9 + i, elements[i]);
+    public void fillElement(MenuElement e) {
+        for (int i = 0; i < this.rows * 9; i++) {
+            if (this.getElement(i) == null) {
+                this.setElement(i, e);
             }
         }
     }
@@ -257,12 +381,13 @@ public abstract class Menu {
     protected void setTitle(String title) {
         this.title = title;
     }
+
     protected void setRows(int rows) {
         this.rows = rows;
     }
 
     public int indexOfElement(MenuElement e) {
-        for (int i = 0; i < this.elements.size(); i++) {
+        for (int i = 0; i < this.rows * 9; i++) {
             if (e.equals(this.getElement(i))) {
                 return i;
             }

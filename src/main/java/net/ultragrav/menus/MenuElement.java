@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 
 @Getter
 public class MenuElement {
-    private final ClickHandlerSet handler;
+    private final ClickHandlerSet<MenuElement> handler;
     @Setter
     private ItemStack item;
 
@@ -20,11 +20,11 @@ public class MenuElement {
     public MenuElement(ItemStack item) {
         this.item = item;
 
-        this.handler = new ClickHandlerSet();
+        this.handler = new ClickHandlerSet<>(this);
         this.updaterInstance = new ElementUpdater(this);
     }
 
-    public ClickHandlerSet clickBuilder() {
+    public ClickHandlerSet<MenuElement> clickBuilder() {
         return handler;
     }
 
