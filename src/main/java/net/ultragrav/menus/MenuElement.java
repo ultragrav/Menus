@@ -56,13 +56,14 @@ public class MenuElement {
 
     private int updateTicker = 0;
 
-    public void update() {
-        if (updateInterval == -1) return;
+    public boolean update() {
+        if (updateInterval == -1) return false;
 
         if (updateTicker++ >= updateInterval) {
             updateTicker = 0;
             updater.accept(this.updaterInstance);
-
+            return true;
         }
+        return false;
     }
 }

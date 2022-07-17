@@ -23,18 +23,6 @@ public class MenuManager implements Listener {
         instance = this;
 
         Bukkit.getPluginManager().registerEvents(this, plugin);
-
-        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            for (Player player : Bukkit.getOnlinePlayers()) {
-                Inventory inv = player.getOpenInventory().getTopInventory();
-                if (inv == null) continue;
-
-                if (inv.getHolder() instanceof MenuHolder) {
-                    MenuHolder holder = (MenuHolder) inv.getHolder();
-                    holder.getMenu().update();
-                }
-            }
-        }, 0, 2);
     }
 
     @EventHandler

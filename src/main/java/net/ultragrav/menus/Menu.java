@@ -4,6 +4,7 @@ import net.ultragrav.menus.shapes.MenuRect;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -79,8 +80,41 @@ public abstract class Menu {
     }
 
     void update() {
-        for (MenuElement element : this.elements.values())
-            element.update();
+        Iterator<UUID> it = viewers.iterator();
+        while (it.hasNext()) {
+            UUID uuid = it.next();
+            Player player = Bukkit.getPlayer(uuid);
+            if (player == null) {
+                it.remove();
+                continue;
+            }
+            Inventory inv = player.getOpenInventory().getTopInventory();
+            if (inv.getHolder() instanceof MenuHolder) {
+                MenuHolder holder = (MenuHolder) inv.getHolder();
+                if (holder.getMenu() != this) {
+                    it.remove();
+                    continue;
+                }
+                update(inv);
+            } else {
+                it.remove();
+            }
+        }
+
+        if (viewers.isEmpty()) {
+            Bukkit.getScheduler().cancelTask(taskId);
+            taskId = -1;
+        }
+    }
+    void update(Inventory inv) {
+        for (int slot : this.elements.keySet()) {
+            MenuElement e = this.elements.get(slot);
+            if (e == null) {
+                continue;
+            }
+            e.update();
+            inv.setItem(slot, e.getItem());
+        }
     }
 
     /**
