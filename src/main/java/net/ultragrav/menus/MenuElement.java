@@ -2,6 +2,8 @@ package net.ultragrav.menus;
 
 import lombok.Getter;
 import lombok.Setter;
+import net.ultragrav.menus.util.ItemBuilder;
+import org.bukkit.Bukkit;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
@@ -50,5 +52,25 @@ public class MenuElement {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Adds a temporary lore
+     *
+     * @param menu  The menu this element is assigned to
+     * @param lore  The lore to add
+     * @param ticks The length of time in ticks (20ths of a second) that it will stay in effect
+     */
+    public void addTempLore(Menu menu, String lore, int ticks) {
+        int index = menu.indexOfElement(this);
+        if (index == -1 || this.getItem() == null) {
+            return;
+        }
+        this.setItem(new ItemBuilder(this.getItem()).addLore(lore).build());
+        MenuManager.instance.invalidateElementsInInvForMenu(menu, index);
+        Bukkit.getScheduler().scheduleSyncDelayedTask(MenuManager.instance.plugin, () -> {
+            MenuElement.this.setItem(new ItemBuilder(MenuElement.this.getItem()).removeLore(lore, false).build());
+            MenuManager.instance.invalidateElementsInInvForMenu(menu, index);
+        }, ticks);
     }
 }

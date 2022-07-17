@@ -72,4 +72,20 @@ public class MenuManager implements Listener {
             }
         }
     }
+
+    public void invalidateElementsInInvForMenu(Menu menu, int... slots) {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            InventoryView view = player.getOpenInventory();
+            if (view == null) continue;
+            Inventory top = view.getTopInventory();
+            if (top == null) continue;
+            if (top.getHolder() instanceof MenuHolder) {
+                if (((MenuHolder) top.getHolder()).getMenu() == menu) {
+                    for (int slot : slots) {
+                        top.setItem(slot, menu.getElement(slot).getItem());
+                    }
+                }
+            }
+        }
+    }
 }
