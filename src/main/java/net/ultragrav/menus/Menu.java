@@ -261,6 +261,15 @@ public abstract class Menu {
         this.rows = rows;
     }
 
+    public int indexOfElement(MenuElement e) {
+        for (int i = 0; i < this.elements.size(); i++) {
+            if (e.equals(this.getElement(i))) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     protected void reopen() {
         MenuManager.instance.reopen(this);
     }

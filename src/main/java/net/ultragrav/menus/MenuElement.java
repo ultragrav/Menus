@@ -1,6 +1,7 @@
 package net.ultragrav.menus;
 
 import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
@@ -9,7 +10,8 @@ import java.util.function.Consumer;
 @Getter
 public class MenuElement {
     private final ClickHandlerSet handler;
-    private final ItemStack item;
+    @Setter
+    private ItemStack item;
 
     private final ElementUpdater updaterInstance;
     private Consumer<ElementUpdater> updater;
@@ -22,26 +24,8 @@ public class MenuElement {
         this.updaterInstance = new ElementUpdater(this);
     }
 
-    /**
-     * Sets the handler for left clicks.
-     *
-     * @param handler The handler.
-     * @return This MenuElement.
-     */
-    public MenuElement leftClick(Consumer<InventoryClickEvent> handler) {
-        this.handler.leftClick(handler);
-        return this;
-    }
-
-    /**
-     * Sets the handler for all clicks.
-     *
-     * @param handler The handler.
-     * @return This MenuElement.
-     */
-    public MenuElement setClickHandler(Consumer<InventoryClickEvent> handler) {
-        this.handler.defaultHandler(handler);
-        return this;
+    public ClickHandlerSet clickBuilder() {
+        return handler;
     }
 
     public MenuElement updateInterval(int interval) {
@@ -50,6 +34,7 @@ public class MenuElement {
     }
 
     public MenuElement updater(Consumer<ElementUpdater> updater) {
+        this.updateInterval = 2;
         this.updater = updater;
         return this;
     }

@@ -35,10 +35,7 @@ public class ElementUpdater {
     }
 
     public ElementUpdater set(ItemStack item) {
-        element.getItem().setType(item.getType());
-        element.getItem().setData(item.getData());
-        element.getItem().setAmount(item.getAmount());
-        element.getItem().setItemMeta(item.getItemMeta());
+        element.setItem(item);
         return this;
     }
 }
