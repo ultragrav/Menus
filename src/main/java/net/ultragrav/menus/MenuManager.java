@@ -12,8 +12,14 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.plugin.Plugin;
 
+import java.util.List;
+
 public class MenuManager implements Listener {
     public static MenuManager instance;
+
+    public static void init(Plugin plugin) {
+        instance = new MenuManager(plugin);
+    }
 
     protected Plugin plugin;
 
@@ -74,6 +80,22 @@ public class MenuManager implements Listener {
     }
 
     public void invalidateElementsInInvForMenu(Menu menu, int... slots) {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            InventoryView view = player.getOpenInventory();
+            if (view == null) continue;
+            Inventory top = view.getTopInventory();
+            if (top == null) continue;
+            if (top.getHolder() instanceof MenuHolder) {
+                if (((MenuHolder) top.getHolder()).getMenu() == menu) {
+                    for (int slot : slots) {
+                        top.setItem(slot, menu.getElement(slot).getItem());
+                    }
+                }
+            }
+        }
+    }
+
+    public void invalidateElementsInInvForMenu(Menu menu, List<Integer> slots) {
         for (Player player : Bukkit.getOnlinePlayers()) {
             InventoryView view = player.getOpenInventory();
             if (view == null) continue;

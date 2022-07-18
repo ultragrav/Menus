@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 @Getter
-@Setter
 @RequiredArgsConstructor
 public class MenuHandlerHolder {
     private final Menu parent;

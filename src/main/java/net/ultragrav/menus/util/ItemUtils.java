@@ -467,8 +467,8 @@ public class ItemUtils {
 
     private static String toNmsEquipmentName(EquipmentSlot slot) {
         switch (slot) {
-//            case OFF_HAND: TODO: Ensure this works across versions
-//                return "offhand";
+            case OFF_HAND: //TODO: Ensure this works across versions
+                return "offhand";
             case FEET:
                 return "feet";
             case LEGS:

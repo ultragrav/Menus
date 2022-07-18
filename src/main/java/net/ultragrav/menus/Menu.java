@@ -1,5 +1,6 @@
 package net.ultragrav.menus;
 
+import lombok.Getter;
 import net.ultragrav.menus.util.ItemBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -10,16 +11,24 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFlag;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
-public abstract class Menu {
+public class Menu {
+    public static Material BACK_BUTTON_ITEM = Material.BARRIER;
+    public static Material PAGE_CONTROL_ITEM = Material.ARROW;
+
+
     private final MenuHandlerHolder handler = new MenuHandlerHolder(this);
     private final Map<Integer, MenuElement> elements = new HashMap<>();
     private final List<UUID> viewers = new ArrayList<>();
+    @Getter
     private String title;
+    @Getter
     private int rows;
     private int taskId = -1;
 
@@ -32,10 +41,37 @@ public abstract class Menu {
         this("", 3);
     }
 
-    public abstract void setup(HumanEntity player);
+    @Deprecated
+    public void build(UUID player) {}
+    public void setup(HumanEntity player) {
+        build(player.getUniqueId());
+    }
+
+    public static MenuElement getBackButton(Consumer<InventoryClickEvent> clickHandler) {
+        MenuElement element = new MenuElement(new ItemBuilder(BACK_BUTTON_ITEM, 1).setName("&b&lBack").addItemFlags(ItemFlag.HIDE_ATTRIBUTES).build());
+        element.clickBuilder().defaultHandler(clickHandler).build();
+        return element;
+    }
+
+    public static MenuElement getBackButton(Menu backMenu) {
+        if (backMenu == null) {
+            return getBackButton((Consumer<InventoryClickEvent>) null);
+        }
+        return getBackButton(e -> backMenu.open(e.getWhoClicked()));
+    }
 
     public MenuHandlerHolder clickBuilder() {
         return handler;
+    }
+
+    public Menu setOwnInventoryClickHandler(Consumer<InventoryClickEvent> clickHandler) {
+        handler.ownInventoryClickHandler().defaultHandler(clickHandler);
+        return this;
+    }
+    public Menu setDragHandler(Consumer<InventoryDragEvent> dragHandler) {
+        handler.defaultDragHandler(dragHandler)
+                .ownInventoryDragHandler(dragHandler);
+        return this;
     }
 
     public void onClose(InventoryCloseEvent event) {
@@ -90,46 +126,24 @@ public abstract class Menu {
     }
 
     void update() {
-        Iterator<UUID> it = viewers.iterator();
-        while (it.hasNext()) {
-            UUID uuid = it.next();
-            Player player = Bukkit.getPlayer(uuid);
-            if (player == null) {
-                it.remove();
+        List<Integer> slots = new ArrayList<>();
+        for (int slot : this.elements.keySet()) {
+            MenuElement e = this.elements.get(slot);
+            if (e == null) {
                 continue;
             }
-            Inventory inv = player.getOpenInventory().getTopInventory();
-            if (inv == null) {
-                it.remove();
-                continue;
-            }
-            if (inv.getHolder() instanceof MenuHolder) {
-                MenuHolder holder = (MenuHolder) inv.getHolder();
-                if (holder.getMenu() != this) {
-                    it.remove();
-                    continue;
-                }
-                update(inv);
-            } else {
-                it.remove();
-            }
+            if (e.update())
+                slots.add(slot);
         }
+        MenuManager.instance.invalidateElementsInInvForMenu(this, slots);
 
-        if (viewers.isEmpty()) {
+        if (getViewers().isEmpty()) {
             Bukkit.getScheduler().cancelTask(taskId);
             taskId = -1;
         }
     }
 
     void update(Inventory inv) {
-        for (int slot : this.elements.keySet()) {
-            MenuElement e = this.elements.get(slot);
-            if (e == null) {
-                continue;
-            }
-            e.update();
-            inv.setItem(slot, e.getItem());
-        }
     }
 
     /**
@@ -378,12 +392,18 @@ public abstract class Menu {
         }
     }
 
-    protected void setTitle(String title) {
+    public void setTitle(String title) {
         this.title = title;
     }
 
-    protected void setRows(int rows) {
+    public void setSize(int rows) {
         this.rows = rows;
+    }
+    public void setRows(int rows) {
+        this.rows = rows;
+    }
+    public int getSize() {
+        return rows * 9;
     }
 
     public int indexOfElement(MenuElement e) {

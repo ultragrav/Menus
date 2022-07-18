@@ -29,21 +29,57 @@ public class ClickHandlerSet<T> {
         handler.accept(event);
     }
 
+    public ClickHandlerSet<T> onLeftClick(Consumer<InventoryClickEvent> handler) {
+        return assign(handler, leftClicks);
+    }
     public ClickHandlerSet<T> leftClick(Consumer<InventoryClickEvent> handler) {
         return assign(handler, leftClicks);
+    }
+    public ClickHandlerSet<T> onRightClick(Consumer<InventoryClickEvent> handler) {
+        return assign(handler, rightClicks);
     }
     public ClickHandlerSet<T> rightClick(Consumer<InventoryClickEvent> handler) {
         return assign(handler, rightClicks);
     }
+    public ClickHandlerSet<T> onMiddleClick(Consumer<InventoryClickEvent> handler) {
+        return assign(handler, ClickType.MIDDLE);
+    }
     public ClickHandlerSet<T> middleClick(Consumer<InventoryClickEvent> handler) {
         return assign(handler, ClickType.MIDDLE);
     }
+
+    public ClickHandlerSet<T> onShiftRightClick(Consumer<InventoryClickEvent> handler) {
+        return assign(handler, ClickType.SHIFT_RIGHT);
+    }
+    public ClickHandlerSet<T> shiftRightClick(Consumer<InventoryClickEvent> handler) {
+        return assign(handler, ClickType.SHIFT_RIGHT);
+    }
+    public ClickHandlerSet<T> onShiftLeftClick(Consumer<InventoryClickEvent> handler) {
+        return assign(handler, ClickType.SHIFT_LEFT);
+    }
+    public ClickHandlerSet<T> shiftLeftClick(Consumer<InventoryClickEvent> handler) {
+        return assign(handler, ClickType.SHIFT_LEFT);
+    }
+    public ClickHandlerSet<T> onLeftOrRightClick(Consumer<InventoryClickEvent> handler) {
+        return leftClick(handler).rightClick(handler);
+    }
+
+    public ClickHandlerSet<T> onDrop(Consumer<InventoryClickEvent> handler) {
+        return assign(handler, ClickType.DROP);
+    }
     public ClickHandlerSet<T> drop(Consumer<InventoryClickEvent> handler) {
+        return assign(handler, ClickType.DROP);
+    }
+    public ClickHandlerSet<T> onDropItem(Consumer<InventoryClickEvent> handler) {
         return assign(handler, ClickType.DROP);
     }
     public ClickHandlerSet<T> defaultHandler(Consumer<InventoryClickEvent> handler) {
         defaultHandler = handler;
         return this;
+    }
+
+    public ClickHandlerSet<T> openMenu(Menu menu) {
+        return defaultHandler(ev -> menu.open(ev.getWhoClicked()));
     }
 
     public ClickHandlerSet<T> assign(Consumer<InventoryClickEvent> handler, ClickType... types) {

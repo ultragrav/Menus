@@ -30,6 +30,15 @@ public class MenuElement {
         return handler;
     }
 
+    public MenuElement setClickHandler(Consumer<InventoryClickEvent> handler) {
+        this.handler.defaultHandler(handler);
+        return this;
+    }
+
+    public MenuElement setUpdateEvery(int interval) {
+        this.updateInterval = interval;
+        return this;
+    }
     public MenuElement updateInterval(int interval) {
         this.updateInterval = interval;
         return this;
@@ -38,6 +47,11 @@ public class MenuElement {
     public MenuElement updater(Consumer<ElementUpdater> updater) {
         this.updateInterval = 2;
         this.updater = updater;
+        return this;
+    }
+    public MenuElement setUpdateHandler(Consumer<MenuElement> updater) {
+        this.updateInterval = 2;
+        this.updater = ud -> ud.apply(updater);
         return this;
     }
 

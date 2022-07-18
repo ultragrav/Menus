@@ -6,6 +6,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 @AllArgsConstructor
 public class ElementUpdater {
@@ -36,6 +37,11 @@ public class ElementUpdater {
 
     public ElementUpdater set(ItemStack item) {
         element.setItem(item);
+        return this;
+    }
+
+    public ElementUpdater apply(Consumer<MenuElement> consumer) {
+        consumer.accept(element);
         return this;
     }
 }
