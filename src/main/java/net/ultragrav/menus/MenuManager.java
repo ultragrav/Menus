@@ -41,6 +41,18 @@ public class MenuManager implements Listener {
     }
 
     @EventHandler
+    public void onOpen(InventoryOpenEvent event) {
+        Inventory openedInv = event.getInventory();
+        if (openedInv.getHolder() instanceof MenuHolder) {
+            return;
+        }
+
+        if (event.getPlayer().getOpenInventory() != null) {
+            handleClose(new InventoryCloseEvent(event.getPlayer().getOpenInventory()));
+        }
+    }
+
+    @EventHandler
     public void onClick(InventoryClickEvent event) {
         Inventory inv = event.getWhoClicked().getOpenInventory().getTopInventory();
         if (inv.getHolder() instanceof MenuHolder) {
