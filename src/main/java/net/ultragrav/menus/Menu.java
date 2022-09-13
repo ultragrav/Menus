@@ -11,6 +11,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemFlag;
 
 import java.util.*;
@@ -42,7 +43,9 @@ public class Menu {
     }
 
     @Deprecated
-    public void build(UUID player) {}
+    public void build(UUID player) {
+    }
+
     public void setup(HumanEntity player) {
         build(player.getUniqueId());
     }
@@ -68,9 +71,9 @@ public class Menu {
         handler.ownInventoryClickHandler().defaultHandler(clickHandler);
         return this;
     }
+
     public Menu setDragHandler(Consumer<InventoryDragEvent> dragHandler) {
-        handler.defaultDragHandler(dragHandler)
-                .ownInventoryDragHandler(dragHandler);
+        handler.defaultDragHandler(dragHandler).ownInventoryDragHandler(dragHandler);
         return this;
     }
 
@@ -113,16 +116,31 @@ public class Menu {
         if (player.getOpenInventory() != null)
             MenuManager.instance.handleClose(new InventoryCloseEvent(player.getOpenInventory()));
 
-        if (setup)
-            setup(player);
+        if (setup) setup(player);
 
         Inventory inv = createInventory();
-        viewers.add(player.getUniqueId());
-        if (taskId == -1) {
-            // We only do updates 10 times per second since more is unnecessary
-            taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(MenuManager.instance.plugin, this::update, 2, 2);
+
+        if (viewers.contains(player.getUniqueId())) {
+            InventoryView view = player.getOpenInventory();
+            if (view != null) {
+                Inventory top = view.getTopInventory();
+                if (top != null) {
+                    if (top.getHolder() instanceof MenuHolder) {
+                        MenuHolder holder = (MenuHolder) top.getHolder();
+                        if (holder.getMenu() == this) {
+                            top.setContents(inv.getContents());
+                        }
+                    }
+                }
+            }
+        } else {
+            viewers.add(player.getUniqueId());
+            if (taskId == -1) {
+                // We only do updates 10 times per second since more is unnecessary
+                taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(MenuManager.instance.plugin, this::update, 2, 2);
+            }
+            Bukkit.getScheduler().runTask(MenuManager.instance.plugin, () -> player.openInventory(inv));
         }
-        Bukkit.getScheduler().runTask(MenuManager.instance.plugin, () -> player.openInventory(inv));
     }
 
     void update() {
@@ -132,8 +150,7 @@ public class Menu {
             if (e == null) {
                 continue;
             }
-            if (e.update())
-                slots.add(slot);
+            if (e.update()) slots.add(slot);
         }
         MenuManager.instance.invalidateElementsInInvForMenu(this, slots);
 
@@ -208,8 +225,7 @@ public class Menu {
 
     public void evenlyDistribute(int row, MenuElement... elements) {
         int size = elements.length;
-        if (size == 0)
-            return;
+        if (size == 0) return;
 
         if (size <= 5) {
             //Distribute separated by 2.
@@ -311,20 +327,16 @@ public class Menu {
             elementIndex++;
         }
 
-        MenuElement back = new MenuElement(new ItemBuilder(Material.ARROW, 1).setName("&fBack").build())
-                .clickBuilder().defaultHandler(e -> {
-                    pageHandler.decrementAndGet();
-                    this.setupActionableList(startPos, endPos, backPos,
-                            nextPos, elementSupplier, pageHandler);
-                    open(e.getWhoClicked(), false);
-                }).build();
-        MenuElement next = new MenuElement(new ItemBuilder(Material.ARROW, 1).setName("&fNext").build())
-                .clickBuilder().defaultHandler(e -> {
-                    pageHandler.incrementAndGet();
-                    this.setupActionableList(startPos, endPos, backPos,
-                            nextPos, elementSupplier, pageHandler);
-                    open(e.getWhoClicked(), false);
-                }).build();
+        MenuElement back = new MenuElement(new ItemBuilder(Material.ARROW, 1).setName("&fBack").build()).clickBuilder().defaultHandler(e -> {
+            pageHandler.decrementAndGet();
+            this.setupActionableList(startPos, endPos, backPos, nextPos, elementSupplier, pageHandler);
+            open(e.getWhoClicked(), false);
+        }).build();
+        MenuElement next = new MenuElement(new ItemBuilder(Material.ARROW, 1).setName("&fNext").build()).clickBuilder().defaultHandler(e -> {
+            pageHandler.incrementAndGet();
+            this.setupActionableList(startPos, endPos, backPos, nextPos, elementSupplier, pageHandler);
+            open(e.getWhoClicked(), false);
+        }).build();
 
         if (page != 0) {
             this.setElement(backPos, back);
@@ -340,11 +352,7 @@ public class Menu {
     }
 
     protected MenuElement getFiller(int dat) {
-        return new MenuElement(new ItemBuilder(Material.STAINED_GLASS_PANE)
-                .setDurability((short) dat)
-                .setName("§7")
-                .build()
-        );
+        return new MenuElement(new ItemBuilder(Material.STAINED_GLASS_PANE).setDurability((short) dat).setName("§7").build());
     }
 
     /**
@@ -377,8 +385,7 @@ public class Menu {
                 index += 9 - (endColumn - startColumn + 1); //Skip to next row
             }
 
-            if (element >= elementList.size())
-                break;
+            if (element >= elementList.size()) break;
 
             setElement(index, elementList.get(element++));
         }
@@ -399,9 +406,11 @@ public class Menu {
     public void setSize(int rows) {
         this.rows = rows;
     }
+
     public void setRows(int rows) {
         this.rows = rows;
     }
+
     public int getSize() {
         return rows * 9;
     }
