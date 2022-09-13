@@ -113,9 +113,6 @@ public class Menu {
     public void open(HumanEntity player, boolean setup) {
         if (player == null) return;
 
-        if (player.getOpenInventory() != null)
-            MenuManager.instance.handleClose(new InventoryCloseEvent(player.getOpenInventory()));
-
         if (setup) setup(player);
 
         Inventory inv = createInventory();
@@ -129,18 +126,22 @@ public class Menu {
                         MenuHolder holder = (MenuHolder) top.getHolder();
                         if (holder.getMenu() == this) {
                             top.setContents(inv.getContents());
+                            return;
                         }
                     }
                 }
             }
-        } else {
-            viewers.add(player.getUniqueId());
-            if (taskId == -1) {
-                // We only do updates 10 times per second since more is unnecessary
-                taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(MenuManager.instance.plugin, this::update, 2, 2);
-            }
-            Bukkit.getScheduler().runTask(MenuManager.instance.plugin, () -> player.openInventory(inv));
         }
+
+        if (player.getOpenInventory() != null)
+            MenuManager.instance.handleClose(new InventoryCloseEvent(player.getOpenInventory()));
+
+        viewers.add(player.getUniqueId());
+        if (taskId == -1) {
+            // We only do updates 10 times per second since more is unnecessary
+            taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(MenuManager.instance.plugin, this::update, 2, 2);
+        }
+        Bukkit.getScheduler().runTask(MenuManager.instance.plugin, () -> player.openInventory(inv));
     }
 
     void update() {
