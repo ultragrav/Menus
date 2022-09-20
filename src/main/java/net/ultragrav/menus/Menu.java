@@ -178,7 +178,7 @@ public class Menu {
         }
 
         int slot = event.getSlot();
-        if (clicked.equals(event.getWhoClicked().getOpenInventory().getTopInventory()) && elements.containsKey(slot)) {
+        if (clicked.equals(event.getWhoClicked().getOpenInventory().getTopInventory()) && elements.get(slot) != null) {
             elements.get(slot).getHandler().handle(event);
         } else {
             handler.handleClick(event);
