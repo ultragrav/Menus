@@ -122,4 +122,18 @@ public class MenuManager implements Listener {
             }
         }
     }
+
+    public void closeInvs(Class<? extends Menu> menuClazz) {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            InventoryView view = player.getOpenInventory();
+            if (view == null) continue;
+            Inventory top = view.getTopInventory();
+            if (top == null) continue;
+            if (top.getHolder() instanceof MenuHolder) {
+                if (((MenuHolder) top.getHolder()).getMenu().getClass() == menuClazz) {
+                    player.closeInventory();
+                }
+            }
+        }
+    }
 }
