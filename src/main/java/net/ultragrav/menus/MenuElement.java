@@ -45,14 +45,14 @@ public class MenuElement {
     }
 
     public MenuElement updater(Consumer<ElementUpdater> updater) {
-        this.updateInterval = 2;
+        if (this.updateInterval == -1) {
+            this.updateInterval = 2;
+        }
         this.updater = updater;
         return this;
     }
     public MenuElement setUpdateHandler(Consumer<MenuElement> updater) {
-        this.updateInterval = 2;
-        this.updater = ud -> ud.apply(updater);
-        return this;
+        return updater(ud -> ud.apply(updater));
     }
 
     private int updateTicker = 0;
