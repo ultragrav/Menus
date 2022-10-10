@@ -60,29 +60,40 @@ public class MenuHandlerHolder {
             }
         }
 
-        InventoryDragEvent ev = new InventoryDragEvent(
-                view,
-                event.getCursor(),
-                event.getOldCursor(),
-                event.getType() == DragType.SINGLE,
-                itemsTop
-        );
-        ev.setCancelled(true);
-        InventoryDragEvent ev2 = new InventoryDragEvent(
-                view,
-                event.getCursor(),
-                event.getOldCursor(),
-                event.getType() == DragType.SINGLE,
-                itemsBottom
-        );
-        ev2.setCancelled(true);
-        if (!itemsTop.isEmpty() && dragHandler != null) dragHandler.accept(ev);
-        else ev.setCancelled(false);
+        boolean cancelled = dragHandler == null && ownDragHandler == null;
+        if (!itemsTop.isEmpty() && dragHandler != null) {
+            InventoryDragEvent ev = new InventoryDragEvent(
+                    view,
+                    event.getCursor(),
+                    event.getOldCursor(),
+                    event.getType() == DragType.SINGLE,
+                    itemsTop
+            );
+            ev.setCancelled(true);
 
-        if (!itemsBottom.isEmpty() && ownDragHandler != null) ownDragHandler.accept(ev2);
-        else ev2.setCancelled(false);
+            dragHandler.accept(ev);
 
-        if (!ev.isCancelled() && !ev2.isCancelled()) event.setCancelled(false);
+            if (ev.isCancelled())
+                cancelled = true;
+        }
+
+        if (!itemsBottom.isEmpty() && ownDragHandler != null) {
+            InventoryDragEvent ev2 = new InventoryDragEvent(
+                    view,
+                    event.getCursor(),
+                    event.getOldCursor(),
+                    event.getType() == DragType.SINGLE,
+                    itemsBottom
+            );
+            ev2.setCancelled(true);
+
+            ownDragHandler.accept(ev2);
+
+            if (ev2.isCancelled())
+                cancelled = true;
+        }
+
+        event.setCancelled(cancelled);
     }
 
     public ClickHandlerSet<MenuHandlerHolder> defaultClickHandler() {
