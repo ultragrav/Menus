@@ -60,7 +60,7 @@ public class MenuHandlerHolder {
             }
         }
 
-        boolean cancelled = dragHandler == null && ownDragHandler == null;
+        boolean cancelled1 = !itemsTop.isEmpty();
         if (!itemsTop.isEmpty() && dragHandler != null) {
             InventoryDragEvent ev = new InventoryDragEvent(
                     view,
@@ -73,10 +73,11 @@ public class MenuHandlerHolder {
 
             dragHandler.accept(ev);
 
-            if (ev.isCancelled())
-                cancelled = true;
+            if (!ev.isCancelled())
+                cancelled1 = false;
         }
 
+        boolean cancelled2 = !itemsBottom.isEmpty();
         if (!itemsBottom.isEmpty() && ownDragHandler != null) {
             InventoryDragEvent ev2 = new InventoryDragEvent(
                     view,
@@ -89,11 +90,11 @@ public class MenuHandlerHolder {
 
             ownDragHandler.accept(ev2);
 
-            if (ev2.isCancelled())
-                cancelled = true;
+            if (!ev2.isCancelled())
+                cancelled2 = false;
         }
 
-        event.setCancelled(cancelled);
+        event.setCancelled(cancelled1 || cancelled2);
     }
 
     public ClickHandlerSet<MenuHandlerHolder> defaultClickHandler() {
