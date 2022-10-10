@@ -77,7 +77,10 @@ public class MenuHandlerHolder {
         );
         ev2.setCancelled(true);
         if (!itemsTop.isEmpty() && dragHandler != null) dragHandler.accept(ev);
+        else ev.setCancelled(false);
+
         if (!itemsBottom.isEmpty() && ownDragHandler != null) ownDragHandler.accept(ev2);
+        else ev2.setCancelled(false);
 
         if (!ev.isCancelled() && !ev2.isCancelled()) event.setCancelled(false);
     }
