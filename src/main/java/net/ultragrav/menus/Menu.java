@@ -81,6 +81,7 @@ public class Menu {
         viewers.remove(event.getPlayer().getUniqueId());
         if (viewers.isEmpty() && taskId != -1) {
             Bukkit.getScheduler().cancelTask(taskId);
+            taskId = -1;
         }
     }
 
