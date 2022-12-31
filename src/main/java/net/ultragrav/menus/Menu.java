@@ -260,7 +260,11 @@ public class Menu {
      * @return The element.
      */
     public MenuElement setElement(int slot, MenuElement element) {
-        elements.put(slot, element);
+        if (element == null) {
+            elements.remove(slot);
+        } else {
+            elements.put(slot, element);
+        }
         return element;
     }
 
