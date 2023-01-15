@@ -81,6 +81,7 @@ public class Menu {
         viewers.remove(event.getPlayer().getUniqueId());
         if (viewers.isEmpty() && taskId != -1) {
             Bukkit.getScheduler().cancelTask(taskId);
+            taskId = -1;
         }
     }
 
@@ -282,7 +283,11 @@ public class Menu {
      * @return The element.
      */
     public MenuElement setElement(int slot, MenuElement element) {
-        elements.put(slot, element);
+        if (element == null) {
+            elements.remove(slot);
+        } else {
+            elements.put(slot, element);
+        }
         return element;
     }
 
@@ -389,7 +394,7 @@ public class Menu {
      * @param elementList The element list.
      */
     public void fillRect(int startRow, int startColumn, int endRow, int endColumn, List<MenuElement> elementList) {
-        //Reordering
+        // Reordering
         int min = Math.min(startColumn, endColumn);
         int max = Math.max(startColumn, endColumn);
         startColumn = min;
@@ -400,18 +405,20 @@ public class Menu {
         startRow = min;
         endRow = max;
 
-        //Place elements
-        int element = 0;
-        int endIndex = endRow * 9 + endColumn;
-        for (int index = startRow * 9 + startColumn; index <= endIndex; index++) {
-            int col = index % 9;
-            if (col > endColumn) { //End of column
-                index += 9 - (endColumn - startColumn + 1); //Skip to next row
+        int elementIndex = 0;
+        for (int row = startRow; row <= endRow; row++) {
+            for (int col = startColumn; col <= endColumn; col++) {
+
+                // Bounds check
+                if (row < 0 || row >= rows || col < 0 || col >= 9) {
+                    continue;
+                }
+
+                int index = getIndex(row, col);
+
+                if (elementIndex >= elementList.size()) return;
+                setElement(index, elementList.get(elementIndex++));
             }
-
-            if (element >= elementList.size()) break;
-
-            setElement(index, elementList.get(element++));
         }
     }
 
