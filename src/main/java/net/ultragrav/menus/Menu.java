@@ -144,6 +144,29 @@ public class Menu {
         Bukkit.getScheduler().runTask(MenuManager.instance.plugin, () -> player.openInventory(inv));
     }
 
+    /**
+     * Attempts to refresh the inventory for all viewers.
+     * Note: If the inventory is not open or has a different size or title, it will not be refreshed.
+     */
+    public void refresh() {
+        for (UUID uuid : viewers) {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player == null) continue;
+            InventoryView view = player.getOpenInventory();
+            if (view == null) continue;
+            Inventory top = view.getTopInventory();
+            if (top == null) continue;
+            if (top.getSize() != rows * 9) continue;
+            if (!Objects.equals(top.getTitle(), title)) continue;
+            if (top.getHolder() instanceof MenuHolder) {
+                MenuHolder holder = (MenuHolder) top.getHolder();
+                if (holder.getMenu() == this) {
+                    top.setContents(createInventory().getContents());
+                }
+            }
+        }
+    }
+
     void update() {
         List<Integer> slots = new ArrayList<>();
         for (int slot : this.elements.keySet()) {
