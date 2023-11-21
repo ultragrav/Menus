@@ -145,8 +145,7 @@ public class Menu {
 
         viewers.add(player.getUniqueId());
         if (taskId == -1) {
-            // We only do updates 10 times per second since more is unnecessary
-            taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(MenuManager.instance.plugin, this::update, 2, 2);
+            taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(MenuManager.instance.plugin, this::update, 1, 1);
         }
         Bukkit.getScheduler().runTask(MenuManager.instance.plugin, () -> player.openInventory(inv));
     }
