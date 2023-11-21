@@ -122,7 +122,13 @@ public class Menu {
             InventoryView view = player.getOpenInventory();
             if (view != null) {
                 Inventory top = view.getTopInventory();
-                if (top != null && top.getSize() == inv.getSize() && Objects.equals(top.getTitle(), inv.getTitle())) {
+                boolean titleSame = false;
+                try {
+                    titleSame = Objects.equals(top.getTitle(), inv.getTitle());
+                } catch (NoSuchMethodError ignored) {
+                    // Newer versions always refresh
+                }
+                if (top != null && top.getSize() == inv.getSize() && titleSame) {
                     if (top.getHolder() instanceof MenuHolder) {
                         MenuHolder holder = (MenuHolder) top.getHolder();
                         if (holder.getMenu() == this) {
