@@ -118,17 +118,18 @@ public class Menu {
 
         Inventory inv = createInventory();
 
+        InventoryView view = player.getOpenInventory();
+        Inventory top = view == null ? null : view.getTopInventory();
+
         if (viewers.contains(player.getUniqueId())) {
-            InventoryView view = player.getOpenInventory();
             if (view != null) {
-                Inventory top = view.getTopInventory();
                 boolean titleSame = false;
                 try {
                     titleSame = Objects.equals(top.getTitle(), inv.getTitle());
                 } catch (NoSuchMethodError ignored) {
                     // Newer versions always refresh
                 }
-                if (top != null && top.getSize() == inv.getSize() && titleSame) {
+                if (top.getSize() == inv.getSize() && titleSame) {
                     if (top.getHolder() instanceof MenuHolder) {
                         MenuHolder holder = (MenuHolder) top.getHolder();
                         if (holder.getMenu() == this) {
@@ -140,8 +141,12 @@ public class Menu {
             }
         }
 
-        if (player.getOpenInventory() != null)
-            MenuManager.instance.handleClose(new InventoryCloseEvent(player.getOpenInventory()));
+        if (top != null && top.getHolder() instanceof MenuHolder) {
+            MenuHolder holder = (MenuHolder) top.getHolder();
+            if (holder.getMenu() != this) {
+                MenuManager.instance.handleClose(new InventoryCloseEvent(player.getOpenInventory()));
+            }
+        }
 
         viewers.add(player.getUniqueId());
         if (taskId == -1) {
@@ -365,11 +370,13 @@ public class Menu {
             pageHandler.decrementAndGet();
             this.setupActionableList(startPos, endPos, backPos, nextPos, elementSupplier, pageHandler);
             open(e.getWhoClicked(), false);
+            e.setCancelled(true);
         }).build();
         MenuElement next = new MenuElement(new ItemBuilder(Material.ARROW, 1).setName("&fNext").build()).clickBuilder().defaultHandler(e -> {
             pageHandler.incrementAndGet();
             this.setupActionableList(startPos, endPos, backPos, nextPos, elementSupplier, pageHandler);
             open(e.getWhoClicked(), false);
+            e.setCancelled(true);
         }).build();
 
         if (page != 0) {
