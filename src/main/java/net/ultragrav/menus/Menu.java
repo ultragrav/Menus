@@ -123,13 +123,7 @@ public class Menu {
 
         if (viewers.contains(player.getUniqueId())) {
             if (view != null) {
-                boolean titleSame = false;
-                try {
-                    titleSame = Objects.equals(top.getTitle(), inv.getTitle());
-                } catch (NoSuchMethodError ignored) {
-                    // Newer versions always refresh
-                }
-                if (top.getSize() == inv.getSize() && titleSame) {
+                if (top.getSize() == inv.getSize()) {
                     if (top.getHolder() instanceof MenuHolder) {
                         MenuHolder holder = (MenuHolder) top.getHolder();
                         if (holder.getMenu() == this) {
